@@ -14,15 +14,12 @@
         :root { --primary: #007bff; --success: #28a745; --danger: #dc3545; --warning: #ffc107; --bg: #f4f7f9; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 0; user-select: none; }
         
-        /* Layout */
         .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; display: flex; gap: 20px; }
         .exam-window { flex: 1; }
         
-        /* Header & Timer */
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: white; padding: 15px 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         #timer { font-weight: bold; color: #fff; background: var(--primary); padding: 8px 15px; border-radius: 5px; font-variant-numeric: tabular-nums; }
 
-        /* Question Box */
         .question-area { background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); min-height: 350px; }
         #question-text { font-size: 1.15rem; margin-bottom: 25px; line-height: 1.6; white-space: pre-wrap; }
 
@@ -33,11 +30,17 @@
         .options label.selected { background: #e7f3ff; border-color: var(--primary); font-weight: 500; }
         .options input { margin-right: 15px; transform: scale(1.2); }
 
-        /* Sidebar & Palette */
         .sidebar { width: 300px; position: sticky; top: 20px; }
         .question-panel { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         
-        #palette-container { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; max-height: 300px; overflow-y: auto; padding: 5px; margin-top: 15px; }
+        /* Stats Grid Styling */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .stat-item { 
+            padding: 8px; border-radius: 4px; font-size: 0.7rem; text-align: center; 
+            color: white; font-weight: bold; text-transform: uppercase;
+        }
+
+        #palette-container { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; max-height: 300px; overflow-y: auto; padding: 5px; }
         .q-num {
             aspect-ratio: 1/1; border: 1px solid #ddd; border-radius: 6px;
             display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; font-size: 0.85rem; background: #f8f9fa;
@@ -47,7 +50,6 @@
         .q-num.not-answered { background: var(--danger); color: white; border-color: var(--danger); }
         .q-num.marked { background: var(--warning); color: black; border-color: var(--warning); border-radius: 50%; }
 
-        /* Buttons */
         .btn { padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
         .btn-blue { background: var(--primary); color: white; }
         .btn-gray { background: #6c757d; color: white; }
@@ -84,6 +86,13 @@
 
     <div class="sidebar">
         <div class="question-panel">
+            <div class="stats-grid">
+                <div class="stat-item" style="background:var(--success)" id="count-answered">0 Answered</div>
+                <div class="stat-item" style="background:var(--danger)" id="count-skipped">0 Not Ans</div>
+                <div class="stat-item" style="background:var(--warning); color:black;" id="count-marked">0 Marked</div>
+                <div class="stat-item" style="background:#6c757d" id="count-unvisited">0 Unvisited</div>
+            </div>
+            <hr>
             <div id="palette-container"></div>
             <button id="submitBtn" class="btn" onclick="submitExam()">Finish Test</button>
         </div>
@@ -91,7 +100,6 @@
 </div>
 
 <script>
-    // SECURITY CHECK: Redirect to login if phone is missing
     if (!localStorage.getItem('currentUser')) {
         window.location.replace('login.html');
     }
@@ -109,20 +117,12 @@
         const sheetLink = params.get('sheet');
         document.getElementById('test-name').innerText = params.get('name') || "SSC Test";
 
-        if (!sheetLink) {
-            alert("Test link missing!");
-            return;
-        }
-
         try {
             const res = await fetch(`${SCRIPT_URL}?sheet=${encodeURIComponent(sheetLink)}`);
             questions = await res.json();
-
             answers = Array(questions.length).fill("");
             status = Array(questions.length).fill(0); 
-            
-            // Mark Q1 as Visited immediately
-            status[0] = 1; 
+            status[0] = 1; // Mark first Q as Visited
 
             document.getElementById('loader').classList.add('hidden');
             document.getElementById('exam-ui').classList.remove('hidden');
@@ -135,7 +135,6 @@
     }
 
     function render() {
-        // If question was never touched, mark it as visited (Not Answered)
         if(status[currentIdx] === 0) status[currentIdx] = 1;
 
         const q = questions[currentIdx];
@@ -159,12 +158,12 @@
 
     function saveAns(val) {
         answers[currentIdx] = val;
-        status[currentIdx] = 2; // Answered
+        status[currentIdx] = 2; 
         updatePalette();
     }
 
     function markReview() {
-        status[currentIdx] = 3; // Marked
+        status[currentIdx] = 3; 
         nav(1);
     }
 
@@ -182,6 +181,7 @@
     }
 
     function updatePalette() {
+        // Update Palette Colors
         const palette = document.getElementById('palette-container');
         palette.innerHTML = questions.map((_, i) => {
             let cls = "q-num";
@@ -191,6 +191,12 @@
             if(status[i] === 3) cls += " marked";
             return `<div class="${cls}" onclick="jump(${i})">${i+1}</div>`;
         }).join('');
+
+        // UPDATE THE COUNTERS
+        document.getElementById('count-answered').innerText = status.filter(s => s === 2).length + " Answered";
+        document.getElementById('count-skipped').innerText = status.filter(s => s === 1).length + " Not Ans";
+        document.getElementById('count-marked').innerText = status.filter(s => s === 3).length + " Marked";
+        document.getElementById('count-unvisited').innerText = status.filter(s => s === 0).length + " Unvisited";
     }
 
     function startTimer() {
@@ -204,16 +210,14 @@
 
     function submitExam(isAuto = false) {
         if(!isAuto && !confirm("Finish and Submit Test?")) return;
-        
         localStorage.setItem('last_questions', JSON.stringify(questions));
         localStorage.setItem('last_answers', JSON.stringify(answers));
-        localStorage.setItem('last_status', JSON.stringify(status)); // This fixes the unvisited count
+        localStorage.setItem('last_status', JSON.stringify(status)); 
         localStorage.setItem('test_meta', JSON.stringify({
             name: document.getElementById('test-name').innerText,
             pos: params.get('pos') || 1,
             neg: params.get('neg') || 0.25
         }));
-
         window.location.href = "results.html";
     }
 
