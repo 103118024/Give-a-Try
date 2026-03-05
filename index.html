@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - SSC Portal</title>
+    <style>
+        :root { --primary: #28a745; --accent: #007bff; --bg: #f4f7f9; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; }
+        
+        /* Navbar */
+        nav {
+            background: white; padding: 1rem 5%;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .user-controls a {
+            text-decoration: none; color: var(--primary);
+            margin-left: 15px; font-weight: 600; font-size: 0.9rem;
+        }
+        .logout-btn { color: #dc3545 !important; cursor: pointer; }
+
+        /* Dashboard Layout */
+        .container { max-width: 1100px; margin: 40px auto; padding: 0 20px; }
+        .welcome-section { margin-bottom: 30px; border-left: 5px solid var(--primary); padding-left: 15px; }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        /* Cards */
+        .card {
+            background: white; border-radius: 12px; padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .card:hover { transform: translateY(-8px); box-shadow: 0 12px 20px rgba(0,0,0,0.1); }
+        
+        /* Specific Card Borders for Visual Variety */
+        .card.material { border-top: 5px solid #ffc107; } /* Yellow */
+        .card.test { border-top: 5px solid #dc3545; }     /* Red */
+        .card.quiz { border-top: 5px solid #28a745; }     /* Green */
+
+        .card h3 { margin: 0 0 10px 0; color: #333; font-size: 1.4rem; }
+        .card p { color: #666; line-height: 1.5; font-size: 0.95rem; }
+        
+        .btn {
+            display: inline-block; background: var(--primary); color: white;
+            padding: 12px 20px; border-radius: 6px; text-decoration: none;
+            margin-top: 20px; font-weight: bold; text-align: center;
+        }
+        .btn-quiz { background: var(--primary); }
+        .btn-test { background: #dc3545; }
+        .btn-material { background: #ffc107; color: #333; }
+
+        @media (max-width: 600px) {
+            nav { flex-direction: column; gap: 10px; text-align: center; }
+            .user-controls { display: flex; flex-wrap: wrap; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo"><strong>SSC Portal</strong></div>
+        <div class="user-controls">
+            <span id="displayPhone">Checking...</span>
+            <a href="profile.html">Profile</a>
+            <a href="forgot.html">Password</a>
+            <a onclick="logout()" class="logout-btn">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="welcome-section">
+            <h1 style="margin:0;">Student Dashboard</h1>
+            <p style="margin:5px 0 0 0; color:#666;">Ready to ace your SSC exams?</p>
+        </div>
+
+        <div class="grid">
+            <div class="card material">
+                <div>
+                    <h3>📚 Materials</h3>
+                    <p>Access high-quality PDF notes, e-books, and daily current affairs specifically curated for SSC aspirants.</p>
+                </div>
+                <a href="materials.html" class="btn btn-material">Open Library</a>
+            </div>
+
+            <div class="card quiz">
+                <div>
+                    <h3>⚡ Daily Quiz</h3>
+                    <p>Short 10-minute topic-wise quizzes on Math, English, and Reasoning. Keep your speed consistent!</p>
+                </div>
+                <a href="quizzes.html" class="btn btn-quiz">Attempt Quiz</a>
+            </div>
+
+            <div class="card test">
+                <div>
+                    <h3>📝 Mock Tests</h3>
+                    <p>Full-length practice exams with real-time scoring and rank analysis to simulate the actual exam hall.</p>
+                </div>
+                <a href="tests.html" class="btn btn-test">Start Exam</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Security Check: Redirect to login if phone is missing from storage
+        window.onload = function() {
+            const user = localStorage.getItem('currentUser');
+            if (!user) {
+                window.location.href = 'login.html'; 
+            } else {
+                document.getElementById('displayPhone').innerText = "👤 " + user;
+            }
+        };
+
+        function logout() {
+            if(confirm("Are you sure you want to logout?")) {
+                localStorage.removeItem('currentUser');
+                window.location.href = 'login.html';
+            }
+        }
+    </script>
+
+</body>
+</html>
